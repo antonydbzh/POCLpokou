@@ -28,21 +28,24 @@ Sa forme lui donne l'allure d'une lanterne.
 
 ## Comment ça marche ?
 ### Pour démarrer votre POCL et le connecter à Internet
-Branchez le POCL pokou.
-En quelques secondes, il déploie un réseau wifi "Wifi POCL pokou".
-Connectez-vous au réseau wifi du POCL
-Ouvrez un navigateur et allez à l'adresse : 192.168.4.1 - Parfois le portail captif s'ouvre automatiquement.
-Cliquez sur "Configuration".
-Le POCL scanne les réseaux Wifi à proximité et les affiches.
-Choisissez le votre et entrez votre mot de passe
-Cliquez sur "Save".
-Le POCL redémarre, il connecté à votre réseau wifi.
+* Branchez le POCL pokou.
+* En quelques secondes, il déploie un réseau wifi "Wifi POCL pokou".
+* Connectez-vous au réseau wifi du POCL
+* Ouvrez un navigateur et allez à l'adresse : 192.168.4.1 - Parfois le portail captif s'ouvre automatiquement.
+* Cliquez sur "Configuration".
+* Le POCL scanne les réseaux Wifi à proximité et les affiches.
+* Choisissez le votre et entrez votre mot de passe
+* Cliquez sur "Save".
+* Le POCL redémarre, il connecté à votre réseau wifi.
 ### Pour configurer la couleur de votre POCL
 Actuellement :
+
 Repérez l'IP de votre POCL : 
 * sur le moniteur série du logiciel Arduino, oubien
 * sur votre internet (il porte un numéro de série commençant par ESP)
+
 Ouvrez un navigateur et allez à l'adresse IP que vous venez de récupérer
+
 Suivez les instruction pour configurer la couleur de votre POCL
 
 
@@ -59,6 +62,7 @@ C'est une bibliothèque Arduino nommée WiFimanager (avev un W et un F majuscule
 
 ### Le serveur web de configuration de la couleur
 c'est d'abord un site web embarqué sur le D1 mini. Il utilise javascript pour l'interface et le choix de la couleur.
+
 La couleur choissie est stockée dans l'EEPROM du D1 mini, ce qui fait que si on le débranche, il conserve la mémoire de sa configuration.
 
 ## TODO
