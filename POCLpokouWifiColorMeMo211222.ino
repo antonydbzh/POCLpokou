@@ -1,6 +1,6 @@
-/////////////////////////
-//      POCL Poke      //
-/////////////////////////
+////////////////////////
+//     POCL Pokou     //
+////////////////////////
 /*
  * Un POCL imaginé et réalisé au Hackathon POCL à l'édulab Rennes 2 les 9 et 10 décembre 2021.
  * 
@@ -10,6 +10,18 @@
  ** #include <MQTT.h> -> pour gérer le protocole de communication, c'est la bibliothèque MQTT de Joël Gähwiler : https://github.com/256dpi/arduino-mqtt
  ** #include <Adafruit_NeoPixel.h> -> pour gérer les rubans de led
  ** #include <WiFiManager.h> -> Bibliothèque WiFiManager pour configurer automatiquement le réseau wifi et le mot de passe.
+ ** #include <ESP_EEPROM.h> // Bibliothèque de gestion de la mémoire
+ *  Serveur web accessible à l'URL http://pokou.local  grace à mDNS.
+
+  Instructions:
+  - Update WiFi SSID and password as necessary.
+  - Flash the sketch to the ESP8266 board
+  - Install host software:
+    - For Linux, install Avahi (http://avahi.org/).
+    - For Windows, install Bonjour (http://www.apple.com/support/bonjour/).
+    - For Mac OSX and iOS support is built in through Bonjour already.
+  - Point your browser to  http://pokou.local you should see a response.
+
  * 
  *                                      BROCHAGE                            
                                 _________________                        
@@ -56,7 +68,8 @@ Les petits Débrouillards - décembre 2021 CC-By-Sa http://creativecommons.org/l
 #include <MQTT.h> // Bibliothèque MQTT par Joël Gaehwiler
 #include <Adafruit_NeoPixel.h> // Bibliothèque NeoPixel d'Adafruit
 #include <WiFiManager.h> // Bibliothèque WiFiManager pour configurer automatiquement le réseau wifi et le mot de passe.
-#include <ESP_EEPROM.h>
+#include <ESP_EEPROM.h> // Bibliothèque de gestion de la mémoire
+#include <ESP8266mDNS.h> // Cette bibliothèque est incluse dans les Bibliothèques ESP8266
 
 WiFiClient net; //on crée l'objet WiFiClient "Net"
 WiFiServer serveurPOCL(80);
@@ -293,8 +306,21 @@ void setup() {
     Serial.println("WiFi connected.");
     Serial.println("IP address : ");
     Serial.println(WiFi.localIP());
-    serveurPOCL.begin(); //démarrage du serveur Web du POCL
+    
     }
+  // demarrage du mDNS
+  if (!MDNS.begin("pokou")) {
+    Serial.println("Erreur d'initialisation MDNS !");
+    while (1) {
+      delay(1000);
+    }
+  }
+  Serial.println("mDNS démarré");
+
+  serveurPOCL.begin(); //démarrage du serveur Web du POCL
+
+  // Add service to MDNS-SD
+  MDNS.addService("http", "tcp", 80);
   
   pixels.begin(); //on initialise le ruban "pixels"
   pinMode(brocheBouton,INPUT_PULLUP);
@@ -312,6 +338,8 @@ void setup() {
 void loop() {
   pixels.clear(); // éteint tout les pixels
   pixels.show(); // affiches pixels
+  
+  MDNS.update();
   
   clientMQTT.loop();
   delay(10);  // <- fixes some issues with WiFi stability
