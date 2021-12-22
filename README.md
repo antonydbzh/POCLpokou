@@ -38,15 +38,17 @@ Sa forme lui donne l'allure d'une lanterne.
 * Cliquez sur "Save".
 * Le POCL redémarre, il connecté à votre réseau wifi.
 ### Pour configurer la couleur de votre POCL
-Actuellement :
+Actuellement il y a 2 options :
 
-Repérez l'IP de votre POCL : 
+1 - Simple : Ouvrez un navigateur et allez à l'adresse pokou.local
+
+2 - Complexe : Repérez l'IP de votre POCL : 
 * sur le moniteur série du logiciel Arduino, oubien
-* sur votre internet (il porte un numéro de série commençant par ESP)
+* sur votre box internet (il porte un numéro de série commençant par ESP)
 
 Ouvrez un navigateur et allez à l'adresse IP que vous venez de récupérer
 
-Suivez les instruction pour configurer la couleur de votre POCL
+Suivez les instructions pour configurer la couleur de votre POCL
 
 
 ## Technologies du POCL pokou
