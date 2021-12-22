@@ -67,8 +67,9 @@ La couleur choissie est stockée dans l'EEPROM du D1 mini, ce qui fait que si on
 
 ## TODO
 * vérifier la sécurité et les risques informatiques
-* imaginer des usages
-* imaginer d'autres types d'interactions (vibreurs, touches tactiles, son...)
+* imaginer d'autres usages
+* imaginer d'autres types d'interactions (vibreurs, touches tactiles, son...).
+* Trouver un moyen pour accéder au configurateur couleur plus facilement.
 
 ## hypothèses
 * Mobiliser les concepts de Many-to-many au lieu de one-to-one
