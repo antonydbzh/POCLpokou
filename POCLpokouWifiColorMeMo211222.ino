@@ -11,16 +11,9 @@
  ** #include <Adafruit_NeoPixel.h> -> pour gérer les rubans de led
  ** #include <WiFiManager.h> -> Bibliothèque WiFiManager pour configurer automatiquement le réseau wifi et le mot de passe.
  ** #include <ESP_EEPROM.h> // Bibliothèque de gestion de la mémoire
- *  Serveur web accessible à l'URL http://pokou.local  grace à mDNS.
-
-  Instructions:
-  - Update WiFi SSID and password as necessary.
-  - Flash the sketch to the ESP8266 board
-  - Install host software:
-    - For Linux, install Avahi (http://avahi.org/).
-    - For Windows, install Bonjour (http://www.apple.com/support/bonjour/).
-    - For Mac OSX and iOS support is built in through Bonjour already.
-  - Point your browser to  http://pokou.local you should see a response.
+ *  Serveur web accessible à l'URL http://pokou.local  grace à mDNS. 
+ Il est possible que l'URL ne fonctionne pas si votre ordinateur ne possède pas les fonction requises : Avahi pour Linux, Bonjour pour Windows.
+ Il faudra alors trouver l'IP de votre POCL sur votre Box Internet
 
  * 
  *                                      BROCHAGE                            
@@ -29,10 +22,10 @@
                            -  |[ ]RST        TX[ ]| -                    
                            -  |[ ]A0  -GPIO  RX[ ]| -                    
                               |[ ]D0-16    5-D1[ ]| -                    
-                              |[ ]D5-14    4-D2[ ]| -                    
+                              |[?]D5-14    4-D2[ ]| -                    
                     Bouton -  |[X]D6-12    0-D3[X]| - ruban de leds             
-                           -  |[ ]D7-13    2-D4[ ]| LED_BUILTIN          
-                           -  |[ ]D8-15     GND[X]| - GND (Boutons, ruban de leds)             
+                           -  |[?]D7-13    2-D4[ ]| LED_BUILTIN          
+                           -  |[?]D8-15     GND[X]| - GND (Boutons, ruban de leds)             
                            -  |[ ]3V3 .      5V[X]| - ruban de Led        
                               |       +---+       |                     
                               |_______|USB|_______|                      
@@ -61,18 +54,18 @@ Matériel :
         |___| |_|
 Les petits Débrouillards - décembre 2021 CC-By-Sa http://creativecommons.org/licenses/by-nc-sa/3.0/
 // Programme nourri de https://randomnerdtutorials.com/esp32-esp8266-rgb-led-strip-web-server/
-// Programme inspiré de celui par Joël Gähwiler
-// https://github.com/256dpi/arduino-mqtt
+// Programme inspiré de celui par Joël Gähwiler -> https://github.com/256dpi/arduino-mqtt
 */
 #include <ESP8266WiFi.h>
-#include <MQTT.h> // Bibliothèque MQTT par Joël Gaehwiler
+#include <MQTT.h>              // Bibliothèque MQTT par Joël Gaehwiler
 #include <Adafruit_NeoPixel.h> // Bibliothèque NeoPixel d'Adafruit
-#include <WiFiManager.h> // Bibliothèque WiFiManager pour configurer automatiquement le réseau wifi et le mot de passe.
-#include <ESP_EEPROM.h> // Bibliothèque de gestion de la mémoire
-#include <ESP8266mDNS.h> // Cette bibliothèque est incluse dans les Bibliothèques ESP8266
+#include <WiFiManager.h>       // Bibliothèque WiFiManager pour configurer automatiquement le réseau wifi et le mot de passe.
+#include <ESP_EEPROM.h>        // Bibliothèque de gestion de la mémoire
+#include <ESP8266mDNS.h>       // Cette bibliothèque est incluse dans les Bibliothèques ESP8266
 
-WiFiClient net; //on crée l'objet WiFiClient "Net"
-WiFiServer serveurPOCL(80);
+WiFiClient net;             // on crée l'objet WiFiClient "Net"
+WiFiServer serveurPOCL(80); // on crée le serveur "serveurPOCL"
+WiFiManager MonReseauWifi;  // on crée l'objet "MonReseauWifi"
 MQTTClient clientMQTT;
 #define BROKER_IP "debrouillards.ddns.net" //IP du serveur sur lequel est installé le Broker MQTT
 
@@ -81,9 +74,13 @@ unsigned long lastMillis = 0;
 //=============Eléments pour le ruban de led et le bouton===============
 
 // Broche de connexion du ruban de LED
-#define PIN D3 // 
+#define PIN D3 
 
 int brocheBouton = 12; //GPIO de la broche D6
+// Il est prévu des fonctionalités supplémentaires grâce à des boutons. Pas activés pour l'instant
+// int brocheBouton = 13; //GPIO de la broche D7
+// int brocheBouton = 14; //GPIO de la broche D5
+// int brocheBouton = 15; //GPIO de la broche D8
 int rouge = 0;
 int bleu = 255;
 int vert = 0;
@@ -91,7 +88,7 @@ int vert = 0;
 // Nombre de Led RDGB dans votre ruban
 #define NUMPIXELS 13 
 
-// on configurer un riban nommé "pixels"
+// on configurer un ruban nommé "pixels"
 Adafruit_NeoPixel pixels(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 
 #define T 1 // temps pour gérer le fade du ruban
@@ -107,11 +104,8 @@ int pos2 = 0;
 int pos3 = 0;
 int pos4 = 0;
 
-// Variable to store the HTTP req  uest
+// Variable to store the HTTP request
 String header;
-
-// Setting PWM bit resolution
-// const int resolution = 256;
 
 // Current time
 unsigned long currentTime = millis();
@@ -121,46 +115,23 @@ unsigned long previousTime = 0;
 const long timeoutTime = 2000;
 
 //==============================================================================
-void connect() {
-  Serial.print("Vérification de la connexion Wifi...");
-  while (WiFi.status() != WL_CONNECTED) {
-    Serial.print(".");
-    delay(1000);
-  }
-  Serial.println("\nPOCL Connecté au Wifi :-) ");
-  Serial.print("\nconnexion au serveur MQTT en cours...");
-  //connection au serveur MQTT : identifiant, User, mot de passe
-  while (!clientMQTT.connect("Antony", "poclpokou", "pokou")) {
-    Serial.print(".");
-    delay(1000);
-  }
-
-  Serial.println("\nconnecté à MQTT !");
-
-// on s'abonne au sujet (topic) "/Poke" 
-  clientMQTT.subscribe("/Poke"); // Attention à la casse !! La casse c'est maj ou minuscule
-  Serial.println("Abonné à /Poke");
-  // client.unsubscribe("/Poke");// Pour se désinscrire
-}
 
 void messageReceived(String &topic, String &payload) {
-  digitalWrite(LED_BUILTIN, HIGH);
-  fade();
   Serial.println("incoming: " + topic + " - " + payload);
   if (payload == "pokou"){
     Serial.println("clic !");
-    digitalWrite(LED_BUILTIN, LOW);
-    delay(100);
-    digitalWrite(LED_BUILTIN, HIGH);
+    fade();
+    fade();
+    fade();
   }
 }
 
 void fade() {
+  // On récupère la couleur du POCL dans sa mémoire et on l'imprime dans le moniteur Série.
   EEPROM.get(0, rouge); Serial.print("Valeur de rouge EEPROM = "); Serial.println(rouge);
   EEPROM.get(4, vert); Serial.print("Valeur de vert EEPROM = "); Serial.println(vert);
   EEPROM.get(8, bleu); Serial.print("Valeur de bleu EEPROM = "); Serial.println(bleu);
   
-  for (int sig=0; sig<3; sig++){
   for (int b=0; b<255; b++){
   pixels.setBrightness(b);
   
@@ -182,7 +153,6 @@ void fade() {
   }
   pixels.show();   // on affiche les pixels
   delay(T);
-  }
   }
 }
 
@@ -208,9 +178,9 @@ void choixCouleur(){
   if (client) {                                // Si il y a une nouvelle connexion,
     currentTime = millis();
     previousTime = currentTime;
-    Serial.println("Nouveau client connecté");          // print a message out in the serial port
-    String currentLine = "";                // créer une chaîne pour contenir les données entrantes du client
-    while (client.connected() && currentTime - previousTime <= timeoutTime) {            // Boucle "while", tant que le client est connecté
+    Serial.println("Nouveau client connecté");
+    String currentLine = "";                   // créer une chaîne pour contenir les données entrantes du client
+    while (client.connected() && currentTime - previousTime <= timeoutTime) {  // Boucle "while", tant que le client est connecté
       currentTime = millis();
       if (client.available()) {             // if there's bytes to read from the client,
         char c = client.read();             // read a byte, then
@@ -263,6 +233,7 @@ void choixCouleur(){
               EEPROM.put(8, bleu);
               boolean ok1 = EEPROM.commit();
               Serial.println((ok1) ? "Commit couleur OK" : "Commit couleur raté");
+              fade(); // petit flash lumineux pour confirmer la couleur
             }
             // On sort ("break") de la boucle "while"
             break;
@@ -276,22 +247,14 @@ void choixCouleur(){
     }
     // Clear the header variable
     header = "";
-     fade();
     // Close the connection
     client.stop();
-    Serial.println("Client disconnected.");
+    Serial.println("Client déconnecté.");
     Serial.println("");
   }
 }
 
-void setup() {
-  Serial.begin(115200); // Ouverture de communication série
-  EEPROM.begin(16);
-  testEEPROM(); 
-  
-  WiFi.mode(WIFI_STA); // la carte D1 mini est mise en mode STATION
-  WiFiManager MonReseauWifi; // on crée l'objet "MonReseauWifi"
-   
+void connexionWifi(){
   bool res;
   res = MonReseauWifi.autoConnect("Wifi POCL Pokou"); // le POCL diffuse un réseau wifi en accès libre nommé "Wifi POCL Pokou"
      
@@ -303,11 +266,44 @@ void setup() {
   
     // Print local IP address and start web server
     Serial.println("");
-    Serial.println("WiFi connected.");
-    Serial.println("IP address : ");
+    Serial.println("Votre POCL est connecté au réseau WiFi");
+    Serial.println("Avec l'adresse IP : ");
     Serial.println(WiFi.localIP());
     
     }
+}
+
+void connect() { 
+  Serial.print("Vérification de la connexion Wifi...");
+  while (WiFi.status() != WL_CONNECTED) {
+    connexionWifi();
+    Serial.print(".");
+    delay(1000);
+  }
+  Serial.println("\nPOCL connecté au Wifi :-) ");
+  Serial.print("\nconnexion au serveur MQTT en cours...");
+  
+  //connection au serveur MQTT : identifiant, User, mot de passe
+  while (!clientMQTT.connect("Antony", "poclpokou", "pokou")) {
+    Serial.print(".");
+    delay(1000);
+  }
+
+  Serial.println("\nconnecté à MQTT !");
+
+// on s'abonne au sujet (topic) "/Poke" 
+  clientMQTT.subscribe("/Poke");    // Attention à la casse !! La casse c'est maj ou minuscule
+  Serial.println("Abonné à /Poke"); // client.unsubscribe("/Poke");// Pour se désinscrire
+}
+
+void setup() {
+  Serial.begin(115200); // Ouverture de communication série
+  EEPROM.begin(16);
+  testEEPROM(); 
+  
+  WiFi.mode(WIFI_STA);  // la carte D1 mini est mise en mode STATION
+  connexionWifi();      // on se connecte au Wifi
+ 
   // demarrage du mDNS
   if (!MDNS.begin("pokou")) {
     Serial.println("Erreur d'initialisation MDNS !");
@@ -322,7 +318,7 @@ void setup() {
   // Add service to MDNS-SD
   MDNS.addService("http", "tcp", 80);
   
-  pixels.begin(); //on initialise le ruban "pixels"
+  pixels.begin();      // on initialise le ruban "pixels"
   pinMode(brocheBouton,INPUT_PULLUP);
   
   pinMode(LED_BUILTIN, OUTPUT);
@@ -330,9 +326,9 @@ void setup() {
   
   // préparation de la connexion au serveur MQTT
   clientMQTT.begin(BROKER_IP, 1883, net); // (IP, port, Client Wifi défini plus haut)
-  clientMQTT.onMessage(messageReceived); // Si on reçoit un message MQTT, la fonction "messageReceived" est appelée.
+  clientMQTT.onMessage(messageReceived);  // Si on reçoit un message MQTT, la fonction "messageReceived" est appelée.
 
-  connect(); // On se connecte
+  connect(); // On se connecte à MQTT
 }
 
 void loop() {
