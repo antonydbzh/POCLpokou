@@ -3,6 +3,13 @@ P.O.C.L. est l'acronyme de Petit Objet Connecté et Ludique.
 
 Les premiers prototypes ont été réalisés à l'occasion du hackathon POCL les 9 & 10 décembre à l'EDULAB REnnes 2 https://www.wiki.lesfabriquesduponant.net/index.php?title=Hackathon_POCL_2021
 
+C'est un projet que se déroule dans le cadre de l'appel à projet "Rennes urban data interface" (RUDI) de Rennes Métropole : https://rudi.datarennes.fr/
+
+## Données et usages de la donnée
+La donnée en jeu dans ce POCL c'est le pokou.
+
+Il s'agit d'une donnée éphémère, comme un salut, un signe, un cin d'oeil. Lorsqu'un POCL reçoit cette donnée, la personne possède le POCL est libre d'en faire ce qu'elle souhaite.
+
 ## Fonction du POCL pokou
 Le POCL pokou est un POCL communautaire interactif. Sa fonction est d'envoyer ou de recevoir un message, nommé "pokou" vers ou provenant des autres POCL pokou. 
 
@@ -60,20 +67,27 @@ Pour cela nous avons fabriqué et mis en ligne un serveur MQTT Mosquitto. Il est
 Le POCL peut avoir un nom individuel (Les D1 mini ont d'ailleurs un identifiant unique), nous n'utilisons pas cette particularité pour l'instant.
 
 ### Le portail captif
-C'est une bibliothèque Arduino nommée WiFimanager (avev un W et un F majuscule !)
+C'est une bibliothèque Arduino nommée WiFimanager (avec un W et un F majuscule !)
 
 ### Le serveur web de configuration de la couleur
 c'est d'abord un site web embarqué sur le D1 mini. Il utilise javascript pour l'interface et le choix de la couleur.
 
 La couleur choissie est stockée dans l'EEPROM du D1 mini, ce qui fait que si on le débranche, il conserve la mémoire de sa configuration.
 
+## Quelles données sont transmises ?
+L'appuis sur le bouton déclenche l(envois un message (pokou), sur le sujet /Poke du serveur MQTT
+
+Tous les services abonnés au sujet /Poke recevrons ce message : pokou !
+
+Le POCL ne possède aucun autre capteur, il ne peut donc transmettre aucune autre information. Vous pouvez le vérifier !
+
 ## TODO
-* vérifier la sécurité et les risques informatiques
-* imaginer d'autres usages
-* imaginer d'autres types d'interactions (vibreurs, touches tactiles, son...).
+* Vérifier la sécurité et les risques informatiques
+* Imaginer d'autres usages
+* Imaginer d'autres types d'interactions (vibreurs, touches tactiles, son...).
 * Trouver un moyen pour accéder au configurateur couleur plus facilement.
 
-## hypothèses
+## Pistes de réflexion
 * Mobiliser les concepts de Many-to-many au lieu de one-to-one
-* concept de POCL communautaire
+* Concept de POCL communautaire
 * Un POCL qui a des heures d'ouverture ? (8h à 20h par exemple) ?
